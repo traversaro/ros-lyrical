@@ -1,0 +1,100 @@
+jobs:
+  stage_0_job_0:
+    name: ros2-bondcpp ros2-gz-common-vendor ros2-gz-transport-vendor
+    runs-on: macos-15
+    strategy:
+      fail-fast: false
+    needs: []
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v7
+    - name: Setup pixi
+      uses: prefix-dev/setup-pixi@v0
+      with:
+        pixi-version: latest
+        cache: 'true'
+        log-level: v
+        frozen: 'true'
+    - name: Build ros2-bondcpp ros2-gz-common-vendor ros2-gz-transport-vendor
+      env:
+        ANACONDA_API_TOKEN: ${{ secrets.ANACONDA_API_TOKEN }}
+        CURRENT_RECIPES: ros2-bondcpp ros2-gz-common-vendor ros2-gz-transport-vendor
+        BUILD_TARGET: osx-arm64
+      run: |
+        export CI=github
+        export GIT_BRANCH=${GITHUB_REF_NAME}
+        export FEEDSTOCK_NAME=${GITHUB_REPOSITORY##*/}
+        .scripts/build_unix.sh --target $BUILD_TARGET
+    permissions:
+      id-token: write
+      attestations: write
+  stage_1_job_1:
+    name: ros2-nav2-map-server ros2-gz-rendering-vendor gz-transport-vendor gz-common-vendor
+      bondcpp
+    runs-on: macos-15
+    strategy:
+      fail-fast: false
+    needs:
+    - stage_0_job_0
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v7
+    - name: Setup pixi
+      uses: prefix-dev/setup-pixi@v0
+      with:
+        pixi-version: latest
+        cache: 'true'
+        log-level: v
+        frozen: 'true'
+    - name: Build ros2-nav2-map-server ros2-gz-rendering-vendor ros-lyrical-gz-transport-vendor
+        ros-lyrical-gz-common-vendor ros-lyrical-bondcpp
+      env:
+        ANACONDA_API_TOKEN: ${{ secrets.ANACONDA_API_TOKEN }}
+        CURRENT_RECIPES: ros2-nav2-map-server ros2-gz-rendering-vendor ros-lyrical-gz-transport-vendor
+          ros-lyrical-gz-common-vendor ros-lyrical-bondcpp
+        BUILD_TARGET: osx-arm64
+      run: |
+        export CI=github
+        export GIT_BRANCH=${GITHUB_REF_NAME}
+        export FEEDSTOCK_NAME=${GITHUB_REPOSITORY##*/}
+        .scripts/build_unix.sh --target $BUILD_TARGET
+    permissions:
+      id-token: write
+      attestations: write
+  stage_2_job_2:
+    name: ros2-gz-sim-vendor nav2-map-server gz-rendering-vendor gz-sim-vendor
+    runs-on: macos-15
+    strategy:
+      fail-fast: false
+    needs:
+    - stage_1_job_1
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v7
+    - name: Setup pixi
+      uses: prefix-dev/setup-pixi@v0
+      with:
+        pixi-version: latest
+        cache: 'true'
+        log-level: v
+        frozen: 'true'
+    - name: Build ros2-gz-sim-vendor ros-lyrical-nav2-map-server ros-lyrical-gz-rendering-vendor
+        ros-lyrical-gz-sim-vendor
+      env:
+        ANACONDA_API_TOKEN: ${{ secrets.ANACONDA_API_TOKEN }}
+        CURRENT_RECIPES: ros2-gz-sim-vendor ros-lyrical-nav2-map-server ros-lyrical-gz-rendering-vendor
+          ros-lyrical-gz-sim-vendor
+        BUILD_TARGET: osx-arm64
+      run: |
+        export CI=github
+        export GIT_BRANCH=${GITHUB_REF_NAME}
+        export FEEDSTOCK_NAME=${GITHUB_REPOSITORY##*/}
+        .scripts/build_unix.sh --target $BUILD_TARGET
+    permissions:
+      id-token: write
+      attestations: write
+name: build_osx_arm64
+on:
+  push:
+    branches:
+    - buildbranch_osx_arm64
